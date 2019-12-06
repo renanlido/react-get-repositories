@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import api from '../../services/api';
 
 import Container from '../../components/Container';
-import { Form, SubmitButton, List } from './styles';
+import { Form, SubmitButton, List, Error } from './styles';
 
 export default class Main extends Component {
   state = {
@@ -13,6 +13,12 @@ export default class Main extends Component {
     repositories: [],
     loading: 0,
     hasError: 0,
+    errorMessage: [
+      { code: 100, message: 'Você precisa indicar um repositório' },
+      { code: 101, message: 'Este repositório já existe' },
+      { code: 102, message: 'Repositório inválido ou inexistente' },
+    ],
+    errorCode: 0,
   };
 
   componentDidMount() {
@@ -46,16 +52,29 @@ export default class Main extends Component {
       });
 
       if (newRepo.toLowerCase() === '') {
+        this.setState({
+          errorCode: 100,
+        });
         throw new Error('Você precisa indicar um repositório');
       }
 
       const hasRepo = repositories.find(r => r.name === newRepo.toLowerCase());
 
       if (hasRepo) {
+        this.setState({
+          errorCode: 101,
+        });
         throw new Error('Repositório Duplicado');
       }
 
-      const response = await api.get(`/repos/${newRepo.toLowerCase()}`);
+      const response = await api
+        .get(`/repos/${newRepo.toLowerCase()}`)
+        .catch(error => {
+          this.setState({
+            errorCode: 102,
+          });
+          throw new Error(error);
+        });
 
       const data = {
         name: response.data.full_name.toLowerCase(),
@@ -79,7 +98,14 @@ export default class Main extends Component {
   };
 
   render() {
-    const { newRepo, repositories, loading, hasError } = this.state;
+    const {
+      newRepo,
+      repositories,
+      loading,
+      hasError,
+      errorCode,
+      errorMessage,
+    } = this.state;
 
     return (
       <Container>
@@ -104,6 +130,12 @@ export default class Main extends Component {
             )}
           </SubmitButton>
         </Form>
+
+        <Error error={hasError}>
+          <span>
+            {errorMessage.map(m => m.code === errorCode && m.message)}
+          </span>
+        </Error>
 
         <List>
           {repositories.map(repository => (

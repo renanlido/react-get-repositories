@@ -56,6 +56,30 @@ export const SubmitButton = styled.button.attrs(props => ({
     `}
 `;
 
+const FadeInAnimation = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+export const Error = styled.div`
+  display: flex;
+  height: 16px;
+  ${props =>
+    props.error
+      ? css`
+          span {
+            display: flex;
+            color: red;
+            animation: ${FadeInAnimation} 1s linear;
+          }
+        `
+      : css`
+          span {
+            display: none;
+          }
+        `};
+`;
+
 export const List = styled.ul`
   list-style: none;
   margin-top: 30px;
