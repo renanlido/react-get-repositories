@@ -5,21 +5,21 @@ import { Link } from 'react-router-dom';
 import api from '../../services/api';
 
 import Container from '../../components/Container';
-import { Form, SubmitButton, List, Error } from './styles';
+import { Form, SubmitButton, List, ErrorMessage } from './styles';
 
 export default class Main extends Component {
-  state = {
-    newRepo: '',
-    repositories: [],
-    loading: 0,
-    hasError: 0,
-    errorMessage: [
-      { code: 100, message: 'Você precisa indicar um repositório' },
-      { code: 101, message: 'Este repositório já existe' },
-      { code: 102, message: 'Repositório inválido ou inexistente' },
-    ],
-    errorCode: 0,
-  };
+  constructor(props) {
+    super(props);
+    this.state = {
+      newRepo: '',
+      repositories: [],
+      loading: 0,
+      hasError: 0,
+      errorMessage: '',
+    };
+  }
+
+  /** NOTE  Carregar dados do localStorage */
 
   componentDidMount() {
     const repositories = localStorage.getItem('repositories');
@@ -28,6 +28,8 @@ export default class Main extends Component {
       this.setState({ repositories: JSON.parse(repositories) });
     }
   }
+
+  /** NOTE Salvar dados no localStorage */
 
   componentDidUpdate(_, prevState) {
     const { repositories } = this.state;
@@ -41,43 +43,34 @@ export default class Main extends Component {
     this.setState({ newRepo: e.target.value });
   };
 
-  handleSubmit = async e => {
+  handleSumbit = async e => {
+    e.preventDefault();
+
     try {
-      const { repositories, newRepo } = this.state;
-
-      e.preventDefault();
-
       this.setState({
         loading: 1,
       });
 
+      const { newRepo, repositories } = this.state;
+
       if (newRepo.toLowerCase() === '') {
-        this.setState({
-          errorCode: 100,
-        });
-        throw new Error('Você precisa indicar um repositório');
+        throw new Error('Você precisa adicionar um repositório.');
       }
 
-      const hasRepo = repositories.find(r => r.name === newRepo.toLowerCase());
+      const hasRepo = repositories.find(
+        r => r.name.toLowerCase() === newRepo.toLowerCase()
+      );
 
       if (hasRepo) {
-        this.setState({
-          errorCode: 101,
-        });
-        throw new Error('Repositório Duplicado');
+        throw new Error('Já existe um repositório com este nome, tente outro.');
       }
 
-      const response = await api
-        .get(`/repos/${newRepo.toLowerCase()}`)
-        .catch(error => {
-          this.setState({
-            errorCode: 102,
-          });
-          throw new Error(error);
-        });
+      const response = await api.get(`/repos/${newRepo}`).catch(() => {
+        throw new Error('Repositório inválido ou inexistente.');
+      });
 
       const data = {
-        name: response.data.full_name.toLowerCase(),
+        name: response.data.full_name,
       };
 
       this.setState({
@@ -88,11 +81,9 @@ export default class Main extends Component {
       });
     } catch (error) {
       this.setState({
-        hasError: 1,
-      });
-    } finally {
-      this.setState({
+        errorMessage: error.message,
         loading: 0,
+        hasError: 1,
       });
     }
   };
@@ -103,7 +94,6 @@ export default class Main extends Component {
       repositories,
       loading,
       hasError,
-      errorCode,
       errorMessage,
     } = this.state;
 
@@ -114,14 +104,13 @@ export default class Main extends Component {
           Repositórios
         </h1>
 
-        <Form onSubmit={this.handleSubmit} error={hasError}>
+        <Form onSubmit={this.handleSumbit} error={hasError}>
           <input
             type="text"
-            placeholder="Adicionar Repositório"
+            placeholder="Adicionar repositório"
             value={newRepo}
             onChange={this.handleInputChange}
           />
-
           <SubmitButton loading={loading}>
             {loading ? (
               <FaSpinner color="#fff" size={14} />
@@ -131,18 +120,16 @@ export default class Main extends Component {
           </SubmitButton>
         </Form>
 
-        <Error error={hasError}>
-          <span>
-            {errorMessage.map(m => m.code === errorCode && m.message)}
-          </span>
-        </Error>
+        <ErrorMessage error={hasError}>
+          <span>{errorMessage}</span>
+        </ErrorMessage>
 
         <List>
           {repositories.map(repository => (
             <li key={repository.name}>
               <span>{repository.name}</span>
               <Link to={`/repository/${encodeURIComponent(repository.name)}`}>
-                Detalhes
+                Detalhar
               </Link>
             </li>
           ))}

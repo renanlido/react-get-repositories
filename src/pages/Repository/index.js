@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import propTypes from 'prop-types';
 import { Link } from 'react-router-dom';
+
 import api from '../../services/api';
 
 import Container from '../../components/Container';
@@ -13,21 +14,24 @@ import {
   PageActions,
 } from './styles';
 
-class Repository extends Component {
-  state = {
-    repository: {},
-    issues: [],
-    loading: 1,
-    filters: [
-      { state: 'all', label: 'Todas', active: true },
-      { state: 'open', label: 'Abertas', active: false },
-      { state: 'closed', label: 'Fechadas', active: false },
-    ],
-    filterIndex: 0,
-    page: 1,
-    disabledNext: 1,
-    disabledBack: 1,
-  };
+export default class Repository extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      repository: {},
+      issues: [],
+      loading: 1,
+      filters: [
+        { state: 'all', label: 'Todas', active: true },
+        { state: 'open', label: 'Abertas', active: false },
+        { state: 'closed', label: 'Fechadas', active: false },
+      ],
+      filterIndex: 0,
+      page: 1,
+      disabledNext: 1,
+      disabledBack: 1,
+    };
+  }
 
   async componentDidMount() {
     const { match } = this.props;
@@ -190,11 +194,9 @@ class Repository extends Component {
 }
 
 Repository.propTypes = {
-  match: PropTypes.shape({
-    params: PropTypes.shape({
-      repository: PropTypes.string,
+  match: propTypes.shape({
+    params: propTypes.shape({
+      repository: propTypes.string,
     }),
   }).isRequired,
 };
-
-export default Repository;

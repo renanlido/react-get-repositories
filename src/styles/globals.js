@@ -5,17 +5,16 @@ export default createGlobalStyle`
     margin:0;
     padding:0;
     outline:0;
-    box-sizing:border-box;
+    box-sizing: border-box;
   }
 
-  html, body, #root{
+  html, body, #root {
     min-height: 100%;
   }
 
   body {
-    background: #7159c1;
+    background:#7159c1;
     -webkit-font-smoothing: antialiased !important;
-	  -moz-osx-font-smoothing: grayscale !important;
   }
 
   body, input, button {
